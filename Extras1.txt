@@ -1,0 +1,111 @@
+/***EXTRAS
+/*** 1. All reviewers who rated Gone with the Wind.
+/***Using INNER JOIN
+SELECT DISTINCT name FROM Reviewer
+INNER JOIN Movie ON Rating.mID = Movie.mID AND Movie.title = 'Gone with the Wind'
+INNER JOIN Rating ON Reviewer.rID = Rating.rID;
+
+/***Using WHERE
+SELECT DISTINCT name FROM Reviewer, Rating, Movie
+WHERE  Movie.title ='Gone with the Wind'
+AND Rating.mID=Movie.mID
+AND Reviewer.rID = Rating.rID;
+
+
+/*** 2. Reviewer name, movie title, and number of stars for any rating where the reviewer is the same as the director of the movie.
+SELECT DISTINCT name, title, stars FROM  Reviewer, Rating, Movie
+WHERE Reviewer.name = Movie.director
+AND Reviewer.rID = Rating.rID
+AND Rating.mID = Movie.mID;
+
+
+/*** 3. All reviewer names and movie names in a single alphabetized list. 
+/*** (Sorted by the first name of the reviewer and first word in the title. No special processing on last names or removing "The".) 
+SELECT name FROM Reviewer UNION SELECT title FROM Movie;
+
+
+/*** 4. Titles of all movies not reviewed by Chris Jackson. 
+SELECT title FROM
+(SELECT DISTINCT title FROM Reviewer, Rating, Movie
+WHERE Reviewer.rID = Rating.rID
+AND Rating.mID = Movie.mID
+UNION
+SELECT DISTINCT title FROM Movie)
+EXCEPT
+SELECT DISTINCT title FROM Reviewer, Rating, Movie
+WHERE Reviewer.name = "Chris Jackson"
+AND Reviewer.rID = Rating.rID
+AND Rating.mID = Movie.mID;
+
+
+/*** 5. Both names of all unique pairs of reviewers where both reviewers gave a rating to the same movie with duplicates eliminated, reviewers not paired with themselves, 
+/*** and the names in the pair in alphabetical order.
+SELECT DISTINCT Re1.name, Re2.name FROM Reviewer Re1, Reviewer Re2, Movie, Rating Ra1, Rating Ra2
+WHERE Re1.name <> Re2.name
+AND Re1.name < Re2.name
+AND Re1.rID = Ra1.rID
+AND Re2.rID = Ra2.rID
+AND Ra1.rID <> Ra2.rID
+AND Ra1.mID = Ra2.mID
+ORDER BY Re1.name, Re2.name;
+
+
+/*** 6. Reviewer name, movie title, and number of stars for each rating that is the lowest (fewest stars) currently in the database.
+SELECT name, title, stars FROM Reviewer, Movie, Rating
+WHERE Reviewer.rID=Rating.rID
+AND Movie.mID=Rating.mID
+AND stars IN (SELECT MIN(stars) FROM Rating);
+
+
+/*** 7. Movie titles and average ratings, from highest-rated to lowest-rated where if two or more movies have the same average rating, they are listed in alphabetical order. 
+SELECT title, AVG(stars) AS "Average Rating" 
+FROM Movie, Rating
+WHERE Rating.mID=Movie.mID
+GROUP BY title
+ORDER BY "Average Rating" DESC;
+
+
+/*** 8. Names of all reviewers who have contributed three or more ratings. 
+SELECT name FROM Reviewer, Rating 
+WHERE Rating.rID=Reviewer.rID
+GROUP BY name
+HAVING COUNT(Rating.rID)>=3;
+
+
+/*** 9. Titles of all movies and director names for all directors that have directed more than one movie sorted by director name, then movie title. 
+SELECT title
+, director FROM Movie M1
+ 
+WHERE 1 < (SELECT COUNT(title) FROM Movie M2 WHERE M2.director = M1.director)
+ORDER BY director, title;
+
+
+
+
+/*** 10. Movie title(s) and average rating for movie(s) with the highest average rating. 
+SELECT  title, "Average Rating" FROM
+(SELECT title, AVG(stars) AS "Average Rating" FROM Movie, Rating
+WHERE Rating.mID=Movie.mID
+GROUP BY title)
+WHERE "Average Rating" IN (SELECT MAX("Average Rating") FROM (SELECT title, AVG(stars) AS "Average Rating" FROM Movie, Rating
+WHERE Rating.mID=Movie.mID
+GROUP BY title));
+
+
+/*** 11. Movie title(s) and average rating for movie(s) with the lowest average rating. 
+SELECT  title, "Average Rating" FROM
+(SELECT title, AVG(stars) AS "Average Rating" FROM Movie, Rating
+WHERE Rating.mID=Movie.mID
+GROUP BY title)
+WHERE "Average Rating" IN (SELECT MIN("Average Rating") FROM (SELECT title, AVG(stars) AS "Average Rating" FROM Movie, Rating
+WHERE Rating.mID=Movie.mID
+GROUP BY title));
+
+
+/*** 12. Ignoring movies whose director is NULL, for each director, return the director's name together with the title(s) of the movie(s) they directed that 
+/*** received the highest rating among all of their movies, and the value of that rating. 
+SELECT director, title, MAX(stars) FROM
+(SELECT director, title, stars FROM Movie, 
+Rating WHERE Rating.mID=Movie.mID AND director NOT NULL GROUP BY title)
+GROUP BY director
+ORDER BY director; 
