@@ -22,7 +22,6 @@ WHERE Movie.mID NOT IN (SELECT mID FROM Rating);
 
 
 /*** 4. Names of all reviewers who have ratings with a NULL value for the date. 
-
 /***Using INNER JOIN
 SELECT DISTINCT name FROM Reviewer
 INNER JOIN Rating ON Reviewer.rID = Rating.rID AND Rating.ratingDate IS NULL;
@@ -34,7 +33,6 @@ WHERE Reviewer.rID = Rating.rID AND Rating.ratingDate IS NULL;
 
 /*** 5. Ratings data in a more readable format with reviewer name, movie title, stars, and ratingDate respectively. 
 /*** Sorted by reviewer name, movie title, and number of stars respectively. 
-
 /***Using INNER JOIN
 SELECT DISTINCT name, title, stars, ratingDate FROM Reviewer
 INNER JOIN Rating ON Reviewer.rID = Rating.rID 
@@ -49,7 +47,6 @@ ORDER BY name, title, stars;
 
 /*** 6. Reviewer's name and the title of the movie for all cases where the same reviewer rated the same movie twice and 
 /*** gave it a higher rating the second time, 
-
 SELECT name, title FROM
 (SELECT name, title, RA1.ratingDate AS RD1, RA2.ratingDate AS RD2 FROM Movie, Reviewer, Rating AS RA1, Rating AS RA2
 WHERE Reviewer.rID = RA1.rID AND Reviewer.rID = RA2.rID AND Movie.mID=RA1.mID AND Movie.mID=RA2.mID AND RD1 < RD2 AND RA1.stars < RA2.stars
@@ -57,7 +54,6 @@ ORDER BY RA1.stars);
 
 
 /***(7) Title and highest number of stars for each movie that has at least one rating sorted by title. 
-
 /***Using INNER JOIN
 SELECT title, MAX(stars) FROM Rating
 INNER JOIN Reviewer ON Reviewer.rID = Rating.rID
@@ -73,7 +69,6 @@ ORDER BY title;
 
 
 /*** 8. Title and rating spread sorted respectively by rating spread (highest to lowest), and movie title. 
-
 /***Using INNER JOIN
 SELECT title, MAX(stars)-MIN(stars) AS range FROM Rating
 INNER JOIN Reviewer ON Reviewer.rID = Rating.rID 
@@ -90,7 +85,6 @@ ORDER BY range DESC, title;
 
 /*** 9. Difference between the average rating of movies released before 1980 and the average rating of movies released after 1980. 
 /*** (calculates the average rating for each movie, then the average of those averages for movies before and then after 1980.) 
-
 /***Using INNER JOIN
 SELECT AVG(avgstars1)-AVG(avgstars2) FROM 
 (SELECT AVG(stars) AS avgstars1 FROM Rating INNER JOIN Movie ON Movie.mID=Rating.mID AND Movie.year < 1980 GROUP BY title),
