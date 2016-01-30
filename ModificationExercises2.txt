@@ -1,0 +1,54 @@
+/***Social-Network Modification Exercises
+.read social.sql
+
+/*** 1. It's time for the seniors to graduate. Remove all 12th graders from Highschooler. 
+DELETE FROM Highschooler WHERE "grade" = 12;
+
+
+/*** 2. If two students A and B are friends, and A likes B but not vice-versa, remove the Likes tuple. 
+DELETE FROM Likes
+WHERE rowid IN
+(SELECT rowid FROM (SELECT DISTINCT L.rowid, H1.name AS A, H2.name AS B, H1.grade AS G1, H2.grade AS G2
+FROM Highschooler AS H1, Highschooler AS H2, Highschooler AS H3, Highschooler AS H4
+JOIN Likes AS L, Friend AS F 
+ON (H1.ID = L.ID1 AND H2.ID = L.ID2)
+AND (H1.ID = F.ID1 AND H2.ID  = F.ID2)
+AND (H1.ID != L.ID2 AND H2.ID != L.ID1)
+EXCEPT
+SELECT DISTINCT L.rowid, H1.name AS A, H2.name AS B, H1.grade AS G1, H2.grade AS G2
+FROM Highschooler AS H1, Highschooler AS H2, Highschooler AS H3, Highschooler AS H4
+JOIN Likes AS L, Likes AS L2, Friend AS F
+ON (H1.ID = L.ID1 AND H2.ID = L.ID2)
+AND (H1.ID = L2.ID2 AND H2.ID = L2.ID1)
+AND (H1.ID = F.ID1 AND H2.ID = F.ID2)));
+
+
+/*** 3. For all cases where A is friends with B, and B is friends with C, 
+/*** add a new friendship for the pair A and C. 
+/*** Do not add duplicate friendships, friendships that already exist, or friendships with oneself. 
+/*** (This one is a bit challenging; congratulations if you get it right.)
+/*** A is friends with B
+/*** B is friends with C 
+/*** add a new friendship for the pair A and C. 
+/*** Do not add duplicate friendships, 
+/*** friendships that already exist, 
+/*** or friendships with oneself.
+
+INSERT INTO Friend
+SELECT H1ID, H2ID FROM 
+(SELECT DISTINCT H1.ID AS H1ID, H3.ID AS H2ID, H1.name AS A, H3.name AS C
+FROM Highschooler AS H1, Highschooler AS H2, Highschooler AS H3 
+JOIN Friend AS F, Friend AS F2
+ON (H1.ID = F.ID1 AND H2.ID = F.ID2)
+AND (H2.ID = F2.ID1 AND H3.ID = F2.ID2)
+AND (H1.ID != H2.ID AND H2.ID != H3.ID AND H3.ID != H1.ID)
+EXCEPT 
+SELECT DISTINCT H1.ID AS H1ID, H2.ID AS H2ID, H1.name AS A, H2.name AS B
+FROM Highschooler AS H1, Highschooler AS H2, Highschooler AS H3 
+JOIN Friend AS F, Friend AS F2
+ON (H1.ID = F.ID1 AND H2.ID = F.ID2
+AND H2.ID = F2.ID1 AND H3.ID = F2.ID2
+AND H1.ID != H2.ID AND H2.ID != H3.ID AND H3.ID!=H1.ID)
+OR (H1.ID = F.ID1 AND H2.ID = F.ID2
+AND H2.ID = F2.ID1 AND H3.ID = F2.ID2
+AND H1.ID != H2.ID AND H2.ID != H3.ID AND H3.ID != H1.ID));

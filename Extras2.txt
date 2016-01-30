@@ -1,0 +1,85 @@
+/EXTRAS2
+/*** 1. Names and grades of students A, B, and C For every situation where student A likes student B, but student B likes a different student C.
+SELECT A, G1, B, G2, C, G3 FROM
+(SELECT H1.name AS A, H2.name AS B, H3.name AS C, H1.grade AS G1, H2.grade AS G2, H3.grade AS G3
+FROM Highschooler AS H1, Highschooler AS  H2, Highschooler AS H3, Likes AS L1, Likes AS L2 
+WHERE H1.ID IN (SELECT ID1 FROM LIKES)
+AND H1.ID NOT IN (SELECT ID2 FROM LIKES)
+AND H2.ID IN (SELECT ID1 FROM LIKES)
+AND H2.ID IN (SELECT ID2 FROM LIKES)
+AND H3.ID IN (SELECT ID2 FROM LIKES)
+AND H1.ID = L1.ID1
+AND H2.ID = L1.ID2
+AND H2.ID = L2.ID1
+AND H3.ID = L2.ID2);
+
+
+/*** 2. Students' names and grades for those students for whom all of their friends are in different grades from themselves. 
+SELECT A, G1 FROM 
+(SELECT H1.name AS A, H1.grade AS G1, H2.name AS B, H2.grade AS G2
+FROM Highschooler AS H1, Highschooler AS H2, Friend AS F
+WHERE H1.ID = F.ID1
+AND H2.ID = F.ID2
+GROUP BY H1.name, H2.name
+HAVING H1.grade != H2.grade)
+EXCEPT
+SELECT A, G1 FROM 
+(SELECT H1.name AS A, H1.grade AS G1, H2.name AS B, H2.grade AS G2 
+FROM Highschooler AS H1, Highschooler AS H2, Friend AS F
+WHERE H1.ID = F.ID1
+AND H2.ID = F.ID2
+GROUP BY H1.name, H2.name
+HAVING H1.grade = H2.grade);
+
+
+/*** 3. Average number of friends per student. 
+SELECT AVG(B) FROM (SELECT H1.name AS A, COUNT(H2.name) AS B
+FROM Highschooler AS H1, Highschooler AS H2, Friend AS F
+WHERE H1.ID = F.ID1
+AND H2.ID = F.ID2
+AND H1.ID != H2.ID
+GROUP BY F.ID1);
+
+
+/*** 4. Number of students who are either friends with Cassandra or are friends of friends of Cassandra. 
+/*** (Do not count Cassandra, even though technically she is a friend of a friend.)
+SELECT DISTINCT COUNT(B) FROM 
+(SELECT DISTINCT B, G FROM
+(SELECT H1.name AS A, H2.name AS B, H3.name AS C, H4.name AS D, H2.grade AS G
+FROM Highschooler AS H1, Highschooler AS H2, Highschooler AS H3, Highschooler AS H4, Friend AS F, Friend AS F2
+WHERE H1.name="Cassandra"
+AND H1.ID = F.ID1
+AND H2.ID = F.ID2
+AND H3.name != "Cassandra"
+AND H3.ID! = H2.ID
+AND H4.ID = F.ID2
+AND H4.ID = F2.ID1
+AND H3.ID = F2.ID2)
+UNION ALL
+SELECT DISTINCT B, G FROM
+(SELECT H1.name AS A, H2.name AS C, H3.name AS B, H4.name AS D, H3.grade AS G 
+FROM Highschooler AS H1, Highschooler AS H2, Highschooler AS H3, Highschooler AS H4, Friend AS F, Friend AS F2
+WHERE H1.name = "Cassandra"
+AND H1.ID = F.ID1
+AND H2.ID = F.ID2
+AND H3.name != "Cassandra"
+AND H3.ID != H2.ID
+AND H4.ID = F.ID2
+AND H4.ID = F2.ID1
+AND H3.ID = F2.ID2));
+
+
+/*** 5. Name and grade of the student(s) with the greatest number of friends. 
+SELECT A, G FROM
+(SELECT A, MAX(CB), G FROM (SELECT H1.name AS A, H2.name AS B, COUNT(H2.name) AS CB, H1.grade AS G
+FROM Highschooler AS H1, Highschooler AS H2, Friend AS F
+WHERE H1.ID = F.ID1
+AND H2.ID = F.ID2
+AND H1.ID != H2.ID
+GROUP BY H1.ID)
+GROUP BY A
+HAVING MAX(CB) >= (SELECT MAX(CB) FROM (SELECT COUNT(H1.name) AS CB FROM Highschooler AS H1, Highschooler AS H2, Friend AS F
+WHERE H1.ID = F.ID1
+AND H2.ID = F.ID2
+AND H1.ID != H2.ID
+GROUP BY H1.ID)));
